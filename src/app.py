@@ -149,7 +149,10 @@ def get_task(name: str) -> Task:
         FROM task
         Where name = :name
         ''', {"name": name}).fetchone()
-    return Task(*row)
+    if row is not None:
+        return Task(*row)
+    else:
+        return None
 
 def add_task(name: str):
     conn = sqlite3.connect(DATABASE)
@@ -194,6 +197,9 @@ def tasks_get():
 @api_required
 def tasks_post():
     name = request.json.get("name")
+    task = get_task(name)
+    if task is not None:
+        return {"message": "Task with this name already exists."}, 500
     add_task(name)
     return ok()
 
@@ -201,6 +207,9 @@ def tasks_post():
 @api_required
 def tasks_delete():
     name = request.json.get("name")
+    task = get_task(name)
+    if task is None:
+        return {"message": "Task not found."}, 500
     delete_task(name)
     return ok()
 
@@ -209,6 +218,8 @@ def tasks_delete():
 def tasks_start_put():
     name = request.json.get("name")
     task = get_task(name)
+    if task is None:
+        return {"message": "Task not found."}, 500
     if task.status is not "Created":
         return {"message": "Task was already started."}, 500
 
@@ -222,6 +233,8 @@ def tasks_start_put():
 def tasks_stop_put():
     name = request.json.get("name")
     task = get_task(name)
+    if task is None:
+        return {"message": "Task not found."}, 500
     if task.status is not "Running":
         return {"message": "Task isn't running."}, 500
 
@@ -233,6 +246,8 @@ def tasks_stop_put():
 @api_required
 def tasks_finish_put():
     name = request.json.get("name")
+    if task is None:
+        return {"message": "Task not found."}, 500
     if task.status is not "Running":
         return {"message": "Task isn't running."}, 500
 
