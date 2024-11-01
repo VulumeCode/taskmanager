@@ -5,14 +5,15 @@ import sqlite3
 import functools
 import uuid
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from datetime import datetime
 from typing import List
 DATABASE = 'database.db'
 
 app = Flask(__name__)
 
 
-def ok(): return {"message":"ok"}, 300
+def ok(): return {"message":"ok"}, 200
 
 def create_table():
     # Connect to the SQLite database
@@ -22,7 +23,7 @@ def create_table():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS task (
             name TEXT PRIMARY KEY,
-            startDate INTEGER DEFAULT NULL,
+            startDate TEXT DEFAULT NULL,
             status TEXT DEFAULT 'Created'
         )''')
     cursor.execute('''
@@ -85,7 +86,7 @@ def api_required(func):
         if request.json:
             api_key = request.json.get("api_key")
         else:
-            return {"message": "Please provide an API key"}, 400
+            return {"message": "Please provide an API key"}, 401
         # Check if API key is correct and valid
         if is_valid(api_key):
             return func(*args, **kwargs)
@@ -98,7 +99,7 @@ def api_required(func):
 def make_key():
     key = str(uuid.uuid4())
     add_key(key)
-    return {"new_key":key}, 300
+    return {"new_key":key}, 200
 
 @app.route('/keys', methods=['DELETE'])
 @api_required
@@ -134,23 +135,20 @@ class Task:
 def list_tasks() -> List[Task]:
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
-    cursor.execute('''
+    x=cursor.execute('''
         SELECT *
         FROM task
-        ''')
-    result = [Task(*row) for row in cursor]
-    conn.commit()
-    conn.close()
-    return result
+        ''').fetchall()
+    return  [Task(*row) for row in x]
 
-def get_task() -> Task:
+def get_task(name: str) -> Task:
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     row = cursor.execute('''
         SELECT *
         FROM task
         Where name = :name
-        ''').fetchone()[0]
+        ''', {"name": name}).fetchone()
     return Task(*row)
 
 def add_task(name: str):
@@ -181,7 +179,7 @@ def update_task(task: Task):
         SET startDate = :startDate,
             status = :status
         WHERE name = :name
-        ''', task)
+        ''', asdict(task))
     conn.commit()
     conn.close()
 
@@ -190,7 +188,14 @@ def update_task(task: Task):
 def tasks_get():
     return {
         "tasks": list_tasks()
-    }, 300
+    }, 200
+
+@app.route('/tasks', methods=['POST'])
+@api_required
+def tasks_post():
+    name = request.json.get("name")
+    add_task(name)
+    return ok()
 
 @app.route('/tasks', methods=['DELETE'])
 @api_required
@@ -199,9 +204,38 @@ def tasks_delete():
     delete_task(name)
     return ok()
 
-@app.route('/tasks/start', methods=['POST'])
+@app.route('/tasks/start', methods=['PUT'])
 @api_required
-def tasks_start_post():
+def tasks_start_put():
     name = request.json.get("name")
-    delete_task(name)
+    task = get_task(name)
+    if task.status is not "Created":
+        return {"message": "Task was already started."}, 500
+
+    task.status = "Running"
+    task.startDate = str(datetime.today())
+    update_task(task)
+    return ok()
+
+@app.route('/tasks/stop', methods=['PUT'])
+@api_required
+def tasks_stop_put():
+    name = request.json.get("name")
+    task = get_task(name)
+    if task.status is not "Running":
+        return {"message": "Task isn't running."}, 500
+
+    task.status = "Failed"
+    update_task(task)
+    return ok()
+
+@app.route('/tasks/finish', methods=['PUT'])
+@api_required
+def tasks_finish_put():
+    name = request.json.get("name")
+    if task.status is not "Running":
+        return {"message": "Task isn't running."}, 500
+
+    task.status = "Successful"
+    update_task(task)
     return ok()
