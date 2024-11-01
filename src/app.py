@@ -1,11 +1,11 @@
 
 
-from flask import Flask, send_from_directory, request, g
-from os import sys
-import re
+from flask import Flask, request
 import sqlite3
 import functools
 import uuid
+import json
+from dataclasses import dataclass
 from typing import List
 DATABASE = 'database.db'
 
@@ -125,19 +125,11 @@ def deactivate_key():
 
 
 ### tasks
+@dataclass
 class Task:
-    def __init__(name: str, startDate: int, status: str):
-        self.name = name 
-        self.startDate = startDate 
-        self.status = status 
-
-    # def json():
-    #     return {
-    #         "name": self.name , 
-    #         "startDate": self.startDate , 
-    #         "status": self.status , 
-    #     }
-
+    name: str
+    startDate: int
+    status: str
 
 def list_tasks() -> List[Task]:
     conn = sqlite3.connect(DATABASE)
@@ -146,11 +138,20 @@ def list_tasks() -> List[Task]:
         SELECT *
         FROM task
         ''')
-    
-    result = list(map(lambda row: Task(*row), cursor))
+    result = [Task(*row) for row in cursor]
     conn.commit()
     conn.close()
     return result
+
+def get_task() -> Task:
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    row = cursor.execute('''
+        SELECT *
+        FROM task
+        Where name = :name
+        ''').fetchone()[0]
+    return Task(*row)
 
 def add_task(name: str):
     conn = sqlite3.connect(DATABASE)
@@ -162,6 +163,28 @@ def add_task(name: str):
     conn.commit()
     conn.close()
 
+def delete_task(name: str):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        DELETE FROM task
+        WHERE name = :name
+        ''', {"name": name})
+    conn.commit()
+    conn.close()
+
+def update_task(task: Task):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE task
+        SET startDate = :startDate,
+            status = :status
+        WHERE name = :name
+        ''', task)
+    conn.commit()
+    conn.close()
+
 @app.route('/tasks', methods=['GET'])
 @api_required
 def tasks_get():
@@ -169,9 +192,16 @@ def tasks_get():
         "tasks": list_tasks()
     }, 300
 
-@app.route('/tasks', methods=['POST'])
+@app.route('/tasks', methods=['DELETE'])
 @api_required
-def tasks_post():
+def tasks_delete():
     name = request.json.get("name")
-    add_task(name)
+    delete_task(name)
+    return ok()
+
+@app.route('/tasks/start', methods=['POST'])
+@api_required
+def tasks_start_post():
+    name = request.json.get("name")
+    delete_task(name)
     return ok()
