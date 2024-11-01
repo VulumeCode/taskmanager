@@ -6,7 +6,7 @@ import re
 import sqlite3
 import functools
 import uuid
-
+from typing import List
 DATABASE = 'database.db'
 
 app = Flask(__name__)
@@ -22,8 +22,8 @@ def create_table():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS task (
             name TEXT PRIMARY KEY,
-            startDate INTEGER,
-            status TEXT NOT NULL
+            startDate INTEGER DEFAULT NULL,
+            status TEXT DEFAULT 'Created'
         )''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS apiKey (
@@ -121,15 +121,57 @@ def deactivate_key():
     set_key_status(key, 0)
     return ok()
 
-@app.after_request
-def apply_caching(response):
-    if response is None:
-        return ok()
-    else:
-        return response
+
+
+
+### tasks
+class Task:
+    def __init__(name: str, startDate: int, status: str):
+        self.name = name 
+        self.startDate = startDate 
+        self.status = status 
+
+    # def json():
+    #     return {
+    #         "name": self.name , 
+    #         "startDate": self.startDate , 
+    #         "status": self.status , 
+    #     }
+
+
+def list_tasks() -> List[Task]:
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT *
+        FROM task
+        ''')
+    
+    result = list(map(lambda row: Task(*row), cursor))
+    conn.commit()
+    conn.close()
+    return result
+
+def add_task(name: str):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO task (name)
+        VALUES (:name)
+        ''', {"name": name})
+    conn.commit()
+    conn.close()
 
 @app.route('/tasks', methods=['GET'])
 @api_required
 def tasks_get():
-    conn = sqlite3.connect(DATABASE)
+    return {
+        "tasks": list_tasks()
+    }, 300
+
+@app.route('/tasks', methods=['POST'])
+@api_required
+def tasks_post():
+    name = request.json.get("name")
+    add_task(name)
     return ok()
