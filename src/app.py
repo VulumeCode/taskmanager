@@ -37,11 +37,6 @@ def create_table():
     conn.commit()
     conn.close()
 
-@app.before_first_request
-def initialize_database():
-    # Call the create_table function before handling the first request
-    create_table()
-    add_key("admin")
 
 def is_valid(api_key: str):
     conn = sqlite3.connect(DATABASE)
@@ -254,3 +249,15 @@ def tasks_finish_put():
     task.status = "Successful"
     update_task(task)
     return ok()
+
+
+
+
+
+
+
+###
+
+with app.app_context():
+    create_table()
+    add_key("admin")
