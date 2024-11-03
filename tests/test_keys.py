@@ -1,8 +1,6 @@
 import pytest
 import json
 
-import taskmanager.keys as keys
-
 
 def test_no_key(client):
     assert (

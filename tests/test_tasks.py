@@ -135,4 +135,3 @@ def test_finish(app, client):
         theTask = tasks.list_tasks()[0]
         assert theTask.startDate != None
         assert theTask.status == "Successful"
-
