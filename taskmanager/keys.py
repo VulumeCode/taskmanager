@@ -99,7 +99,7 @@ def api_required(func):
 
 @bp.route("/new", methods=["POST"])
 @api_required
-def make_key():
+def route_make_key():
     key = str(uuid.uuid4())
     add_key(key)
     return {"new_key": key}, 200
@@ -107,7 +107,7 @@ def make_key():
 
 @bp.route("/", methods=["DELETE"])
 @api_required
-def delete_key():
+def route_delete_key():
     key = request.json.get("key")
     delete_key(key)
     return ok
@@ -115,7 +115,7 @@ def delete_key():
 
 @bp.route("/activate", methods=["PUT"])
 @api_required
-def activate_key():
+def route_activate_key():
     key = request.json.get("key")
     set_key_status(key, 1)
     return ok
@@ -123,7 +123,7 @@ def activate_key():
 
 @bp.route("/deactivate", methods=["PUT"])
 @api_required
-def deactivate_key():
+def route_deactivate_key():
     key = request.json.get("key")
     set_key_status(key, 0)
     return ok

@@ -23,6 +23,7 @@ bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 ok = {"message": "ok"}, 200
 
+
 @dataclass
 class Task:
     name: str
@@ -102,13 +103,13 @@ def update_task(task: Task):
 
 @bp.route("/", methods=["GET"])
 @api_required
-def tasks_get():
+def route_tasks_get():
     return {"tasks": list_tasks()}, 200
 
 
 @bp.route("/", methods=["POST"])
 @api_required
-def tasks_post():
+def route_tasks_post():
     name = request.json.get("name")
     task = get_task(name)
     if task is not None:
@@ -119,7 +120,7 @@ def tasks_post():
 
 @bp.route("/", methods=["DELETE"])
 @api_required
-def tasks_delete():
+def route_tasks_delete():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
@@ -130,7 +131,7 @@ def tasks_delete():
 
 @bp.route("/start", methods=["PUT"])
 @api_required
-def tasks_start_put():
+def route_tasks_start_put():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
@@ -146,7 +147,7 @@ def tasks_start_put():
 
 @bp.route("/stop", methods=["PUT"])
 @api_required
-def tasks_stop_put():
+def route_tasks_stop_put():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
@@ -161,7 +162,7 @@ def tasks_stop_put():
 
 @bp.route("/finish", methods=["PUT"])
 @api_required
-def tasks_finish_put():
+def route_tasks_finish_put():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
