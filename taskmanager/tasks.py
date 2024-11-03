@@ -2,6 +2,7 @@ from flask import Flask, request, Blueprint
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List
+from enum import Enum, auto
 
 from .keys import api_required
 from .db import get_db
@@ -9,6 +10,13 @@ from .db import get_db
 bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
 ok = {"message": "ok"}, 200
+
+
+class Status(Enum):
+    Created = auto()
+    Running = auto()
+    Failed = auto()
+    Successful = auto()
 
 
 @dataclass
@@ -123,10 +131,13 @@ def route_tasks_start_put():
     task = get_task(name)
     if task is None:
         return {"message": "Task not found."}, 404
-    if task.status != "Created":
+
+    print(type(task.status))
+    print((task.status))
+    if task.status != Status.Created.name:
         return {"message": "Task was already started."}, 500
 
-    task.status = "Running"
+    task.status = Status.Running.name
     task.startDate = str(datetime.today())
     update_task(task)
     return ok
@@ -139,10 +150,10 @@ def route_tasks_stop_put():
     task = get_task(name)
     if task is None:
         return {"message": "Task not found."}, 404
-    if task.status != "Running":
+    if task.status != Status.Running.name:
         return {"message": "Task isn't running."}, 500
 
-    task.status = "Failed"
+    task.status = Status.Failed.name
     update_task(task)
     return ok
 
@@ -154,9 +165,9 @@ def route_tasks_finish_put():
     task = get_task(name)
     if task is None:
         return {"message": "Task not found."}, 404
-    if task.status != "Running":
+    if task.status != Status.Running.name:
         return {"message": "Task isn't running."}, 500
 
-    task.status = "Successful"
+    task.status = Status.Successful.name
     update_task(task)
     return ok

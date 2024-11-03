@@ -60,7 +60,7 @@ def test_start(app, client):
     with app.app_context():
         theTask = tasks.list_tasks()[0]
         assert theTask.startDate != None
-        assert theTask.status == "Running"
+        assert theTask.status == tasks.Status.Running.name
 
 
 def test_start_error_notfound(app, client):
@@ -112,7 +112,7 @@ def test_stop(app, client):
     with app.app_context():
         theTask = tasks.list_tasks()[0]
         assert theTask.startDate != None
-        assert theTask.status == "Failed"
+        assert theTask.status == tasks.Status.Failed.name
 
 
 def test_finish(app, client):
@@ -134,4 +134,4 @@ def test_finish(app, client):
     with app.app_context():
         theTask = tasks.list_tasks()[0]
         assert theTask.startDate != None
-        assert theTask.status == "Successful"
+        assert theTask.status == tasks.Status.Successful.name
