@@ -13,7 +13,6 @@ CREATE TABLE apiKey (
     active INTEGER DEFAULT 1 NOT NULL
 );
 
-INSERT INTO apiKey 
-    (key) 
-    VALUES 
+INSERT INTO apiKey (key) 
+VALUES 
     ('admin');
