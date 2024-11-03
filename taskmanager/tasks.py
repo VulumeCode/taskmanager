@@ -123,7 +123,7 @@ def tasks_delete():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
-        return {"message": "Task not found."}, 500
+        return {"message": "Task not found."}, 404
     delete_task(name)
     return ok
 
@@ -134,7 +134,7 @@ def tasks_start_put():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
-        return {"message": "Task not found."}, 500
+        return {"message": "Task not found."}, 404
     if task.status != "Created":
         return {"message": "Task was already started."}, 500
 
@@ -150,7 +150,7 @@ def tasks_stop_put():
     name = request.json.get("name")
     task = get_task(name)
     if task is None:
-        return {"message": "Task not found."}, 500
+        return {"message": "Task not found."}, 404
     if task.status != "Running":
         return {"message": "Task isn't running."}, 500
 
@@ -163,8 +163,9 @@ def tasks_stop_put():
 @api_required
 def tasks_finish_put():
     name = request.json.get("name")
+    task = get_task(name)
     if task is None:
-        return {"message": "Task not found."}, 500
+        return {"message": "Task not found."}, 404
     if task.status != "Running":
         return {"message": "Task isn't running."}, 500
 
