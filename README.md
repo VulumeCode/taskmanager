@@ -16,3 +16,25 @@ Create a REST API in Python for managing long running tasks with the following r
 - Secure the API with API key authentication and build API key management (creating, deleting and deactivating keys)
 - Choose your backend storage technology and 3rd party libraries. Motivate your choice.
 - Add some tests and a way to package and deploy your software as a Docker container.
+
+
+
+
+# Setup
+```bash
+docker-compose build
+```
+
+# Run
+```bash
+docker-compose up
+```
+
+# Test
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -e .
+pip install pytest
+pytest
+```
